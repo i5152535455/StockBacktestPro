@@ -19,6 +19,17 @@ STOP_LOSS = 8
 # 停利 (%)
 TAKE_PROFIT = 20
 
+# ===========================
+# 交易成本
+# ===========================
+
+# 手續費 (0.1425%)
+BUY_COMMISSION = 0.001425
+SELL_COMMISSION = 0.001425
+
+# 證交稅 (0.3%)
+SELL_TAX = 0.003
+
 # ========= 成交量 =========
 USE_VOLUME_FILTER = False
 MIN_VOLUME = 500
