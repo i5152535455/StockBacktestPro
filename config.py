@@ -6,12 +6,18 @@
 # ========= 市場 =========
 MARKET = "TW"          # TW / US
 
-# ========= K棒 =========
-TIMEFRAME = "W"        # D=日 K、W=周 K、M=月 K
+# K棒週期
+TIMEFRAME = "W"      # D=日K  W=周K
 
-# ========= EMA =========
+# EMA
 FAST_EMA = 20
 SLOW_EMA = 60
+
+# 停損 (%)
+STOP_LOSS = 8
+
+# 停利 (%)
+TAKE_PROFIT = 20
 
 # ========= 成交量 =========
 USE_VOLUME_FILTER = False
