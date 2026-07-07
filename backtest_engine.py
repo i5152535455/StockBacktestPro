@@ -14,6 +14,20 @@ def calculate_profit(buy_price, sell_price):
 
     return (sell_income - buy_cost) / buy_cost * 100
 
+def calculate_profit_amount(invest_amount, buy_price, sell_price):
+
+    buy_cost = buy_price * (1 + config.BUY_COMMISSION)
+
+    sell_income = sell_price * (
+        1
+        - config.SELL_COMMISSION
+        - config.SELL_TAX
+    )
+
+    profit_ratio = (sell_income - buy_cost) / buy_cost
+
+    return invest_amount * profit_ratio
+
 
 def run_backtest(df):
 
@@ -48,15 +62,24 @@ def run_backtest(df):
             sell_date = row["Date"]
 
             profit = calculate_profit(buy_price, sell_price)
+ 
+
+            profit_amount = calculate_profit_amount(
+            config.POSITION_SIZE,
+            buy_price,
+            sell_price
+            )
 
             trades.append({
-                "Buy Date": buy_date,
-                "Buy Price": buy_price,
-                "Sell Date": sell_date,
-                "Sell Price": sell_price,
-                "Profit %": round(profit, 2),
-                "Exit Reason": "Stop Loss"
+            "Buy Date": buy_date,
+            "Buy Price": buy_price,
+            "Sell Date": sell_date,
+            "Sell Price": sell_price,
+            "Profit %": round(profit, 2),
+            "Profit Amount": round(profit_amount, 0),
+            "Exit Reason": "Stop Loss"
             })
+           
 
             position = False
             buy_price = 0
@@ -72,6 +95,12 @@ def run_backtest(df):
 
             profit = calculate_profit(buy_price, sell_price)
 
+            profit_amount = calculate_profit_amount(
+            config.POSITION_SIZE,
+            buy_price,
+            sell_price
+         )
+
 
             trades.append({
                 "Buy Date": buy_date,
@@ -79,6 +108,7 @@ def run_backtest(df):
                 "Sell Date": sell_date,
                 "Sell Price": sell_price,
                 "Profit %": round(profit, 2),
+                "Profit Amount": round(profit_amount, 0),
                 "Exit Reason": "Take Profit"
             })
 
@@ -120,13 +150,20 @@ def run_backtest(df):
 
         profit = calculate_profit(buy_price, sell_price)
 
+        profit_amount = calculate_profit_amount(
+        config.POSITION_SIZE,
+        buy_price,
+        sell_price
+        )
+
         trades.append({
-            "Buy Date": buy_date,
-            "Buy Price": buy_price,
-            "Sell Date": sell_date,
-            "Sell Price": sell_price,
-            "Profit %": round(profit, 2),
-            "Exit Reason": "End of Backtest"
+        "Buy Date": buy_date,
+        "Buy Price": buy_price,
+        "Sell Date": sell_date,
+        "Sell Price": sell_price,
+        "Profit %": round(profit, 2),
+        "Profit Amount": round(profit_amount, 0),
+        "Exit Reason": "End of Backtest"
         })
 
     pf.summary()

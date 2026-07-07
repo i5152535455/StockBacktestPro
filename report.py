@@ -1,4 +1,5 @@
 import pandas as pd
+import config
 
 
 def show_report(trades):
@@ -23,17 +24,29 @@ def show_report(trades):
 
     total_profit = trades["Profit %"].sum()
 
+    # ===========================
+    # Portfolio
+    # ===========================
+    net_profit = trades["Profit Amount"].sum()
+
+    final_capital = config.INITIAL_CAPITAL + net_profit
+
+    roi = net_profit / config.INITIAL_CAPITAL * 100
+
     print()
     print("========== 回測報告 ==========")
 
     print(f"交易次數：{total_trade}")
-
     print(f"勝率：{win_rate:.2f}%")
-
     print(f"平均報酬：{avg_profit:.2f}%")
-
     print(f"最佳交易：{best_trade:.2f}%")
-
     print(f"最差交易：{worst_trade:.2f}%")
-
     print(f"累積報酬：{total_profit:.2f}%")
+
+    print()
+    print("========== Portfolio ==========")
+
+    print(f"初始本金：{config.INITIAL_CAPITAL:,.0f}")
+    print(f"總獲利：{net_profit:,.0f}")
+    print(f"最終本金：{final_capital:,.0f}")
+    print(f"ROI：{roi:.2f}%")

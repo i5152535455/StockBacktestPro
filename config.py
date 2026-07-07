@@ -13,6 +13,19 @@ TIMEFRAME = "W"      # D=日K  W=周K
 FAST_EMA = 20
 SLOW_EMA = 60
 
+# ===========================
+# 進場模式
+# ===========================
+# CROSS：EMA黃金交叉才買
+# TREND：只要EMA20 > EMA60且沒有持股就買
+BUY_MODE = "CROSS"
+
+# 停損 (%)
+STOP_LOSS = 8
+
+# 停利 (%)
+TAKE_PROFIT = 20
+
 # 停損 (%)
 STOP_LOSS = 8
 

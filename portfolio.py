@@ -24,6 +24,12 @@ class Portfolio:
 
         # 是否持股
         self.position = False
+        
+        # 已投入資金
+        self.invested = 0
+
+        # 已實現損益
+        self.realized_profit = 0
 
         # 交易紀錄
         self.trades = []
