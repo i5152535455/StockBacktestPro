@@ -36,16 +36,51 @@ class Portfolio:
 
     def buy(self, date, price):
 
+        # 每次投入固定金額
+        invest = min(config.POSITION_SIZE, self.cash)
+
+        # 可買股數
+        self.shares = invest / price
+
+        # 扣除現金
+        self.cash -= invest
+
+        self.invested = invest
+
         self.position = True
         self.buy_price = price
 
-    def sell(self, date, price):
+    def sell(self, date, price, exit_reason=""):
+
+        sell_amount = self.shares * price
+
+        profit_amount = sell_amount - self.invested
+
+        self.cash += sell_amount
+
+        self.realized_profit += profit_amount
+
+        self.trades.append({
+
+        "Buy Price": self.buy_price,
+
+        "Sell Price": price,
+
+        "Profit Amount": round(profit_amount, 2),
+
+        "Exit Reason": exit_reason
+
+    })
 
         self.position = False
+        self.shares = 0
+        self.buy_price = 0
+        self.invested = 0
 
     def summary(self):
 
         print("========== Portfolio ==========")
         print(f"Initial Cash : {self.initial_cash}")
-        print(f"Cash         : {self.cash}")
-        print(f"Shares       : {self.shares}")
+        print(f"Cash         : {self.cash:,.0f}")
+        print(f"Shares       : {self.shares:.4f}")
+        print(f"Realized P/L : {self.realized_profit:,.0f}")

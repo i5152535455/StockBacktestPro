@@ -25,7 +25,6 @@ def calculate_profit_amount(invest_amount, buy_price, sell_price):
     )
 
     profit_ratio = (sell_income - buy_cost) / buy_cost
-
     return invest_amount * profit_ratio
 
 
@@ -50,6 +49,8 @@ def run_backtest(df):
             buy_price = row["Close"]
             buy_date = row["Date"]
 
+            pf.buy(buy_date, buy_price)
+
             stop_loss_price = buy_price * (1 - config.STOP_LOSS / 100)
             take_profit_price = buy_price * (1 + config.TAKE_PROFIT / 100)
 
@@ -60,6 +61,8 @@ def run_backtest(df):
 
             sell_price = row["Close"]
             sell_date = row["Date"]
+
+            pf.sell(sell_date, sell_price)
 
             profit = calculate_profit(buy_price, sell_price)
  
@@ -93,6 +96,8 @@ def run_backtest(df):
             sell_price = row["Close"]
             sell_date = row["Date"]
 
+            pf.sell(sell_date, sell_price)
+
             profit = calculate_profit(buy_price, sell_price)
 
             profit_amount = calculate_profit_amount(
@@ -124,6 +129,8 @@ def run_backtest(df):
             sell_price = row["Close"]
             sell_date = row["Date"]
 
+            pf.sell(sell_date, sell_price)
+
             profit = calculate_profit(buy_price, sell_price)
 
             trades.append({
@@ -147,6 +154,8 @@ def run_backtest(df):
 
         sell_price = df.iloc[-1]["Close"]
         sell_date = df.iloc[-1]["Date"]
+
+        pf.sell(sell_date, sell_price)
 
         profit = calculate_profit(buy_price, sell_price)
 
