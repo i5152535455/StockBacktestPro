@@ -8,6 +8,10 @@ def show_report(trades):
         print("沒有交易")
         return
 
+    # ==========================
+    # 基本統計
+    # ==========================
+
     total_trade = len(trades)
 
     win_trade = len(trades[trades["Profit %"] > 0])
@@ -24,14 +28,41 @@ def show_report(trades):
 
     total_profit = trades["Profit %"].sum()
 
-    # ===========================
+    # ==========================
     # Portfolio
-    # ===========================
+    # ==========================
+
     net_profit = trades["Profit Amount"].sum()
 
     final_capital = config.INITIAL_CAPITAL + net_profit
 
     roi = net_profit / config.INITIAL_CAPITAL * 100
+
+    # ==========================
+    # 最大回撤 (Max Drawdown)
+    # ==========================
+
+    equity = [config.INITIAL_CAPITAL]
+
+    for profit in trades["Profit Amount"]:
+        equity.append(equity[-1] + profit)
+
+    peak = equity[0]
+    max_drawdown = 0
+
+    for value in equity:
+
+        if value > peak:
+            peak = value
+
+        drawdown = (peak - value) / peak * 100
+
+        if drawdown > max_drawdown:
+            max_drawdown = drawdown
+
+    # ==========================
+    # 顯示結果
+    # ==========================
 
     print()
     print("========== 回測報告 ==========")
@@ -42,6 +73,7 @@ def show_report(trades):
     print(f"最佳交易：{best_trade:.2f}%")
     print(f"最差交易：{worst_trade:.2f}%")
     print(f"累積報酬：{total_profit:.2f}%")
+    print(f"最大回撤：{max_drawdown:.2f}%")
 
     print()
     print("========== Portfolio ==========")
