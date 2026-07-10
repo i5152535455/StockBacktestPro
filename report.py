@@ -27,6 +27,24 @@ def show_report(trades):
     # Profit Factor
     # ==========================
 
+       # ==========================
+    # Average Win / Loss
+    # ==========================
+
+    avg_win = trades.loc[
+        trades["Profit %"] > 0,
+        "Profit %"
+    ].mean()
+
+    avg_loss = abs(
+        trades.loc[
+            trades["Profit %"] < 0,
+            "Profit %"
+        ].mean()
+    )
+
+    risk_reward = avg_win / avg_loss
+   
     gross_profit = trades.loc[
         trades["Profit Amount"] > 0,
         "Profit Amount"
@@ -104,6 +122,14 @@ def show_report(trades):
 
     print(f"交易次數：{total_trade}")
     print(f"勝率：{win_rate:.2f}%")
+    print()
+
+    print(f"平均獲利：{avg_win:.2f}%")
+    print(f"平均虧損：{avg_loss:.2f}%")
+    print(f"盈虧比：{risk_reward:.2f}")
+
+    print()
+
     print(f"平均報酬：{avg_profit:.2f}%")
     print(f"最佳交易：{best_trade:.2f}%")
     print(f"最差交易：{worst_trade:.2f}%")

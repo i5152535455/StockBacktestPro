@@ -28,7 +28,7 @@ def calculate_profit_amount(invest_amount, buy_price, sell_price):
     return invest_amount * profit_ratio
 
 
-def run_backtest(df):
+def run_backtest(df, verbose=True):
 
     pf = portfolio.Portfolio()
     position = False
@@ -175,6 +175,7 @@ def run_backtest(df):
         "Exit Reason": "End of Backtest"
         })
 
-    pf.summary()
+    if verbose:
+     pf.summary()
     
     return pd.DataFrame(trades)
