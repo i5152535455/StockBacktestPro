@@ -3,6 +3,98 @@ import config
 import os
 import matplotlib.pyplot as plt
 
+def calculate_metrics(trades):
+
+    if trades.empty:
+        return None
+
+    total_trade = len(trades)
+
+    win_trade = len(trades[trades["Profit %"] > 0])
+
+    lose_trade = len(trades[trades["Profit %"] <= 0])
+
+    win_rate = win_trade / total_trade * 100
+
+    avg_profit = trades["Profit %"].mean()
+
+    avg_win = trades.loc[
+        trades["Profit %"] > 0,
+        "Profit %"
+    ].mean()
+
+    avg_loss = abs(
+        trades.loc[
+            trades["Profit %"] < 0,
+            "Profit %"
+        ].mean()
+    )
+
+    risk_reward = avg_win / avg_loss
+
+    gross_profit = trades.loc[
+        trades["Profit Amount"] > 0,
+        "Profit Amount"
+    ].sum()
+
+    gross_loss = abs(
+        trades.loc[
+            trades["Profit Amount"] < 0,
+            "Profit Amount"
+        ].sum()
+    )
+
+    if gross_loss == 0:
+        profit_factor = float("inf")
+    else:
+        profit_factor = gross_profit / gross_loss
+
+    best_trade = trades["Profit %"].max()
+
+    worst_trade = trades["Profit %"].min()
+
+    total_profit = trades["Profit %"].sum()
+
+    net_profit = trades["Profit Amount"].sum()
+
+    final_capital = config.INITIAL_CAPITAL + net_profit
+
+    roi = net_profit / config.INITIAL_CAPITAL * 100
+
+    equity = [config.INITIAL_CAPITAL]
+
+    for profit in trades["Profit Amount"]:
+        equity.append(equity[-1] + profit)
+
+    peak = equity[0]
+    max_drawdown = 0
+
+    for value in equity:
+
+        if value > peak:
+            peak = value
+
+        drawdown = (peak - value) / peak * 100
+
+        if drawdown > max_drawdown:
+            max_drawdown = drawdown
+
+    return {
+        "Trades": total_trade,
+        "Win Rate": win_rate,
+        "Average Profit": avg_profit,
+        "Average Win": avg_win,
+        "Average Loss": avg_loss,
+        "Risk Reward": risk_reward,
+        "Profit Factor": profit_factor,
+        "Best Trade": best_trade,
+        "Worst Trade": worst_trade,
+        "Total Profit": total_profit,
+        "Max Drawdown": max_drawdown,
+        "Net Profit": net_profit,
+        "Final Capital": final_capital,
+        "ROI": roi
+    }
 
 def show_report(trades):
 

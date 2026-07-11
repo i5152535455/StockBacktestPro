@@ -27,33 +27,45 @@ for file in os.listdir(folder):
 
     df = strategy.generate_signal(df)
 
-trades = backtest_engine.run_backtest(
-    df,
-    verbose=False
-)
-net_profit = trades["Profit Amount"].sum()
+trades = backtest_engine.run_backtest(df)
 
-roi = float(net_profit / config.INITIAL_CAPITAL * 100)
+metrics = report.calculate_metrics(trades)
+
+roi = metrics["ROI"]
 
 results.append({
-
     "Stock": file.replace(".csv", ""),
-
-    "ROI": round(roi, 2),
-
-    "Trades": len(trades)
-
+    "ROI": round(metrics["ROI"], 2),
+    "Win Rate": round(metrics["Win Rate"], 2),
+    "Profit Factor": round(metrics["Profit Factor"], 2),
+    "Max DD": round(metrics["Max Drawdown"], 2),
+    "Risk Reward": round(metrics["Risk Reward"], 2),
+    "Trades": metrics["Trades"]
 })
 
 print()
 
-print("========== Scanner Result ==========")
 
-result_df = pd.DataFrame(results)
+results_df = pd.DataFrame(results)
 
-result_df = result_df.sort_values(
+# ROI由大到小排序
+results_df = results_df.sort_values(
     by="ROI",
     ascending=False
+).reset_index(drop=True)
+
+print()
+print("========== Scanner Result ==========")
+print(results_df)
+import os
+
+os.makedirs("output", exist_ok=True)
+
+results_df.to_csv(
+    "output/scanner_result.csv",
+    index=False,
+    encoding="utf-8-sig"
 )
 
-print(result_df)
+print()
+print("已輸出：output/scanner_result.csv")
