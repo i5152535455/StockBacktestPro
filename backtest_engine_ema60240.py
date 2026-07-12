@@ -31,10 +31,14 @@ def calculate_profit_amount(invest_amount, buy_price, sell_price):
 def run_backtest(df, verbose=True):
 
     pf = portfolio.Portfolio()
+
     position = False
+    position_size = 0
+
     buy_price = 0
     buy_date = None
-    stop_loss_price = 0
+
+    partial_exit = False
 
     trades = []
 
@@ -46,16 +50,17 @@ def run_backtest(df, verbose=True):
         if row["BUY"] and not position:
 
             position = True
+            position_size = 1.0
             buy_price = row["Close"]
             buy_date = row["Date"]
 
             pf.buy(buy_date, buy_price)
 
-            stop_loss_price = buy_price * (1 - config.STOP_LOSS / 100)
-            take_profit_price = buy_price * (1 + config.TAKE_PROFIT / 100)
+            partial_exit = False
+
 
         # ===================
-        # 停損
+        # 跌破 EMA60 出場
         # ===================
         elif position and row["Close"] < row[f"EMA{config.FAST_EMA}"]:
 
@@ -80,72 +85,29 @@ def run_backtest(df, verbose=True):
             "Sell Price": sell_price,
             "Profit %": round(profit, 2),
             "Profit Amount": round(profit_amount, 0),
-            "Exit Reason": "Stop Loss"
+            "Exit Reason": "EMA60 Exit"
             })
            
 
             position = False
+            position_size = 0
             buy_price = 0
             buy_date = None
 
         # ===================
-        # 停利
+        # 第一次獲利：漲三倍賣 1/3
         # ===================
-        elif position and row["Close"] >= take_profit_price:
+        elif (
+             position
+             and (not partial_exit)
+             and row["Close"] >= buy_price * 3
+            ):
 
-            sell_price = row["Close"]
-            sell_date = row["Date"]
+         print(f"{buy_date} 三倍價達成，賣出 1/3")
 
-            pf.sell(sell_date, sell_price)
-
-            profit = calculate_profit(buy_price, sell_price)
-
-            profit_amount = calculate_profit_amount(
-            config.POSITION_SIZE,
-            buy_price,
-            sell_price
-         )
-
-
-            trades.append({
-                "Buy Date": buy_date,
-                "Buy Price": buy_price,
-                "Sell Date": sell_date,
-                "Sell Price": sell_price,
-                "Profit %": round(profit, 2),
-                "Profit Amount": round(profit_amount, 0),
-                "Exit Reason": "Take Profit"
-            })
-
-            position = False
-            buy_price = 0
-            buy_date = None    
-
-        # ===================
-        # EMA死亡交叉賣出
-        # ===================
-        elif row["SELL"] and position:
-
-            sell_price = row["Close"]
-            sell_date = row["Date"]
-
-            pf.sell(sell_date, sell_price)
-
-            profit = calculate_profit(buy_price, sell_price)
-
-            trades.append({
-                "Buy Date": buy_date,
-                "Buy Price": buy_price,
-                "Sell Date": sell_date,
-                "Sell Price": sell_price,
-                "Profit %": round(profit, 2),
-                "Exit Reason": "EMA Sell"
-                
-            })
-
-            position = False
-            buy_price = 0
-            buy_date = None
+         partial_exit = True
+    # 下一步會真正實作賣出1/3
+ 
 
     # ===================
     # 最後一天平倉
