@@ -25,7 +25,10 @@ slow_name = f"EMA{config.SLOW_EMA}"
 print(df[["Date", fast_name, slow_name, "BUY", "SELL"]].tail(20))
 
 # 執行回測
-trades = backtest_engine.run_backtest(df)
+trades = backtest_engine.run_backtest(
+    df,
+    verbose=True
+)
 
 # 顯示交易紀錄
 print()

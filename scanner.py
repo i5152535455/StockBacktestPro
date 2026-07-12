@@ -20,35 +20,39 @@ for file in os.listdir(folder):
 
     print(f"讀取：{filepath}")
 
-try:
+    try:
 
-    df = indicators.load_data(filepath)
+        df = indicators.load_data(filepath)
 
-    df = indicators.convert_timeframe(df)
+        df = indicators.convert_timeframe(df)
 
-    df = indicators.calculate_ema(df)
+        df = indicators.calculate_ema(df)
 
-    df = strategy.generate_signal(df)
+        df = strategy.generate_signal(df)
 
-    trades = backtest_engine.run_backtest(df)
+        trades = backtest_engine.run_backtest(
+            df,
+            verbose=False
+        )
 
-    metrics = report.calculate_metrics(trades)
+        metrics = report.calculate_metrics(trades)
 
-    results.append({
-        "Stock": file.replace(".csv", ""),
-        "ROI": round(metrics["ROI"], 2),
-        "Win Rate": round(metrics["Win Rate"], 2),
-        "Profit Factor": round(metrics["Profit Factor"], 2),
-        "Max DD": round(metrics["Max Drawdown"], 2),
-        "Risk Reward": round(metrics["Risk Reward"], 2),
-        "Trades": metrics["Trades"]
-    })
+        results.append({
+            "Stock": file.replace(".csv", ""),
+            "ROI": round(metrics["ROI"], 2),
+            "Win Rate": round(metrics["Win Rate"], 2),
+            "Profit Factor": round(metrics["Profit Factor"], 2),
+            "Max DD": round(metrics["Max Drawdown"], 2),
+            "Risk Reward": round(metrics["Risk Reward"], 2),
+            "Trades": metrics["Trades"]
+        })
 
-    print(f"{file} 完成")
+        print(f"{file} 完成")
 
-except Exception as e:
+    except Exception as e:
 
-    print(f"{file} 發生錯誤：{e}")
+        print(f"{file} 發生錯誤：{e}")
+
 
 print()
 
