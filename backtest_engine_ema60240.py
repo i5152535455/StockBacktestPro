@@ -1,6 +1,6 @@
 import pandas as pd
 import config
-import portfolio
+import portfolio_ema60240 as portfolio
 
 def calculate_profit(buy_price, sell_price):
 
@@ -94,6 +94,13 @@ def run_backtest(df, verbose=True):
 
             })
 
+            pf.sell(
+              sell_date,
+              sell_price,
+              position=1/3,
+              exit_reason="Triple Target"
+            )
+
             position_size = 2 / 3
 
             partial_exit = True
@@ -106,7 +113,12 @@ def run_backtest(df, verbose=True):
             sell_price = row["Close"]
             sell_date = row["Date"]
 
-            pf.sell(sell_date, sell_price)
+            pf.sell(
+              sell_date,
+              sell_price,
+              position=position_size,
+              exit_reason="EMA60 Exit"
+            )
 
             profit = calculate_profit(buy_price, sell_price)
 
@@ -144,7 +156,12 @@ def run_backtest(df, verbose=True):
         sell_price = df.iloc[-1]["Close"]
         sell_date = df.iloc[-1]["Date"]
 
-        pf.sell(sell_date, sell_price)
+        pf.sell(
+          sell_date,
+          sell_price,
+          position=position_size,
+          exit_reason="End of Backtest"
+        )
 
         profit = calculate_profit(buy_price, sell_price)
 
