@@ -55,3 +55,26 @@ END_DATE = "2026-07-01"
 INITIAL_CAPITAL = 1000000
 MAX_POSITIONS = 10
 POSITION_SIZE = 100000
+# ==========================
+# Scanner Filter
+# ==========================
+
+MIN_ROI = 10
+
+MIN_WIN_RATE = 50
+
+MIN_PROFIT_FACTOR = 2
+
+MAX_DRAWDOWN = 5
+
+# ==========================
+# Scanner Score
+# ==========================
+
+ROI_WEIGHT = 0.40
+
+WINRATE_WEIGHT = 0.25
+
+PF_WEIGHT = 0.25
+
+DD_WEIGHT = 0.10

@@ -65,9 +65,46 @@ results_df = results_df.sort_values(
     ascending=False
 ).reset_index(drop=True)
 
+# 計算 Score
+results_df["Score"] = (
+    results_df["ROI"] * config.ROI_WEIGHT +
+    results_df["Win Rate"] * config.WINRATE_WEIGHT +
+    results_df["Profit Factor"] * 10 * config.PF_WEIGHT +
+    (100 - results_df["Max DD"]) * config.DD_WEIGHT
+)
+
+results_df["Score"] = results_df["Score"].round(2)
+
+# 建立 Buy Candidates
+buy_df = results_df[
+    (results_df["ROI"] >= config.MIN_ROI) &
+    (results_df["Win Rate"] >= config.MIN_WIN_RATE) &
+    (results_df["Profit Factor"] >= config.MIN_PROFIT_FACTOR) &
+    (results_df["Max DD"] <= config.MAX_DRAWDOWN)
+]
+
+# Buy Candidates 依 Score 排序
+buy_df = buy_df.sort_values(
+    by="Score",
+    ascending=False
+).reset_index(drop=True)
+
+results_df["Score"] = (
+    results_df["ROI"] * config.ROI_WEIGHT +
+    results_df["Win Rate"] * config.WINRATE_WEIGHT +
+    results_df["Profit Factor"] * 10 * config.PF_WEIGHT +
+    (100 - results_df["Max DD"]) * config.DD_WEIGHT
+)
+results_df["Score"] = results_df["Score"].round(2)
+
 print()
 print("========== Scanner Result ==========")
 print(results_df)
+
+print()
+print("========== Buy Candidates ==========")
+
+print(buy_df)
 
 os.makedirs("output", exist_ok=True)
 
@@ -76,6 +113,11 @@ results_df.to_csv(
     index=False,
     encoding="utf-8-sig"
 )
-
+buy_df.to_csv(
+    "output/buy_candidates.csv",
+    index=False,
+    encoding="utf-8-sig"
+)
 print()
 print("已輸出：output/scanner_result.csv")
+print("已輸出：output/buy_candidates.csv")
