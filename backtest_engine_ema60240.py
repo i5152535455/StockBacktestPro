@@ -1,5 +1,5 @@
 import pandas as pd
-import config
+import config_ema60240 as config
 import portfolio_ema60240 as portfolio
 
 def calculate_profit(buy_price, sell_price):
@@ -27,6 +27,51 @@ def calculate_profit_amount(invest_amount, buy_price, sell_price):
     profit_ratio = (sell_income - buy_cost) / buy_cost
     return invest_amount * profit_ratio
 
+def record_sell(
+    pf,
+    trades,
+    buy_date,
+    buy_price,
+    sell_date,
+    sell_price,
+    position,
+    exit_reason
+):
+
+    pf.sell(
+        sell_date,
+        sell_price,
+        position=position,
+        exit_reason=exit_reason
+    )
+
+    profit = calculate_profit(
+        buy_price,
+        sell_price
+    )
+
+    profit_amount = calculate_profit_amount(
+        config.POSITION_SIZE * position,
+        buy_price,
+        sell_price
+    )
+
+    trades.append({
+
+        "Buy Date": buy_date,
+        "Buy Price": buy_price,
+
+        "Sell Date": sell_date,
+        "Sell Price": sell_price,
+
+        "Position": position,
+
+        "Profit %": round(profit,2),
+        "Profit Amount": round(profit_amount,0),
+
+        "Exit Reason": exit_reason
+
+    })
 
 def run_backtest(df, verbose=True):
 
@@ -58,52 +103,36 @@ def run_backtest(df, verbose=True):
 
             partial_exit = False
 
-        # ===================
-        # 第一次獲利：漲三倍賣 1/3
-        # ===================
-        elif (
-            position
-            and (not partial_exit)
-            and row["Close"] >= buy_price * 3
-        ):
+    # ===================
+    # 三倍停利
+    # ===================
+        if position and not partial_exit:
 
-            sell_price = row["Close"]
-            sell_date = row["Date"]
-
-            profit = calculate_profit(
-                buy_price,
-                sell_price
+            print(
+                buy_date,
+                "Buy:", round(buy_price,2),
+                "Now:", round(row["Close"],2),
+                "Target:", round(buy_price*3,2)
             )
 
-            profit_amount = calculate_profit_amount(
-                config.POSITION_SIZE / 3,
-                buy_price,
-                sell_price
-            )
+            if row["Close"] >= buy_price * 3:
 
-            trades.append({
+                print(">>> Triple Hit <<<")
 
-                "Buy Date": buy_date,
-                "Buy Price": buy_price,
-                "Sell Date": sell_date,
-                "Sell Price": sell_price,
-                "Position": 1 / 3,
-                "Profit %": round(profit, 2),
-                "Profit Amount": round(profit_amount, 0),
-                "Exit Reason": "Triple Target"
+                record_sell(
+                    pf,
+                    trades,
+                    buy_date,
+                    buy_price,
+                    row["Date"],
+                    row["Close"],
+                    1/3,
+                    "Triple Target"
+                )
 
-            })
+                position_size = 2/3
+                partial_exit = True
 
-            pf.sell(
-              sell_date,
-              sell_price,
-              position=1/3,
-              exit_reason="Triple Target"
-            )
-
-            position_size = 2 / 3
-
-            partial_exit = True
 
         # ===================
         # 跌破 EMA60 出場
@@ -113,38 +142,23 @@ def run_backtest(df, verbose=True):
             sell_price = row["Close"]
             sell_date = row["Date"]
 
-            pf.sell(
-              sell_date,
-              sell_price,
-              position=position_size,
-              exit_reason="EMA60 Exit"
-            )
-
-            profit = calculate_profit(buy_price, sell_price)
-
-            profit_amount = calculate_profit_amount(
-                config.POSITION_SIZE * position_size,
+            record_sell(
+                pf,
+                trades,
+                buy_date,
                 buy_price,
-                sell_price
+                sell_date,
+                sell_price,
+                position_size,
+                "EMA60 Exit"
             )
-
-            trades.append({
-
-                "Buy Date": buy_date,
-                "Buy Price": buy_price,
-                "Sell Date": sell_date,
-                "Sell Price": sell_price,
-                "Position": position_size,
-                "Profit %": round(profit, 2),
-                "Profit Amount": round(profit_amount, 0),
-                "Exit Reason": "EMA60 Exit"
-
-            })
 
             position = False
             position_size = 0
             buy_price = 0
             buy_date = None
+
+
     # 下一步會真正實作賣出1/3
  
 
@@ -156,31 +170,16 @@ def run_backtest(df, verbose=True):
         sell_price = df.iloc[-1]["Close"]
         sell_date = df.iloc[-1]["Date"]
 
-        pf.sell(
-          sell_date,
-          sell_price,
-          position=position_size,
-          exit_reason="End of Backtest"
+        record_sell(
+            pf,
+            trades,
+            buy_date,
+            buy_price,
+            sell_date,
+            sell_price,
+            position_size,
+            "End of Backtest"
         )
-
-        profit = calculate_profit(buy_price, sell_price)
-
-        profit_amount = calculate_profit_amount(
-        config.POSITION_SIZE * position_size,
-        buy_price,
-        sell_price
-        )
-
-        trades.append({
-        "Buy Date": buy_date,
-        "Buy Price": buy_price,
-        "Sell Date": sell_date,
-        "Sell Price": sell_price,
-        "Position": position_size,
-        "Profit %": round(profit, 2),
-        "Profit Amount": round(profit_amount, 0),
-        "Exit Reason": "End of Backtest"
-        })
 
     if verbose:
      pf.summary()

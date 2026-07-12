@@ -1,5 +1,5 @@
 import pandas as pd
-import config
+import config_ema60240 as config
 
 
 def load_data(filepath):

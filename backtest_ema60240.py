@@ -1,4 +1,4 @@
-import config
+import config_ema60240 as config
 import indicators
 import report
 import strategy_ema60240 as strategy
