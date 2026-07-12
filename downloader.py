@@ -2,18 +2,14 @@ import os
 import yfinance as yf
 import config
 
+from stock_list import TW_STOCKS
+
 
 def download_data():
 
-    tickers = [
-        "2330.TW",
-        "2454.TW",
-        "2303.TW",
-        "2317.TW",
-        "2882.TW"
-    ]
 
-    for ticker in tickers:
+    for stock in TW_STOCKS:
+        ticker = stock + ".TW"
 
         print(f"開始下載 {ticker}")
 
