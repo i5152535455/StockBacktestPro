@@ -5,31 +5,47 @@ import config
 
 def download_data():
 
-    ticker = "2330.TW"
+    tickers = [
+        "2330.TW",
+        "2454.TW",
+        "2303.TW",
+        "2317.TW",
+        "2882.TW"
+    ]
 
-    print(f"開始下載 {ticker}")
+    for ticker in tickers:
 
-    df = yf.download(
-        ticker,
-        start=config.START_DATE,
-        end=config.END_DATE,
-        auto_adjust=True
-    )
+        print(f"開始下載 {ticker}")
 
-    if df.empty:
-        print("下載失敗")
-        return
+        df = yf.download(
+            ticker,
+            start=config.START_DATE,
+            end=config.END_DATE,
+            auto_adjust=True
+        )
 
-    # ===== 把新版 MultiIndex 轉成一般欄位 =====
-    if hasattr(df.columns, "nlevels") and df.columns.nlevels > 1:
-        df.columns = df.columns.get_level_values(0)
+        if df.empty:
+            print("下載失敗")
+            continue
 
-    # Date 變成一般欄位
-    df.reset_index(inplace=True)
+        # 把新版 MultiIndex 轉成一般欄位
+        if hasattr(df.columns, "nlevels") and df.columns.nlevels > 1:
+            df.columns = df.columns.get_level_values(0)
 
-    save_path = os.path.join("data", "TW", "2330.csv")
+        # Date 變成一般欄位
+        df.reset_index(inplace=True)
 
-    df.to_csv(save_path, index=False)
+        stock_id = ticker.replace(".TW", "")
 
-    print("下載完成")
-    print(save_path)
+        save_path = os.path.join(
+            "data",
+            "TW",
+            f"{stock_id}.csv"
+        )
+
+        df.to_csv(save_path, index=False)
+
+        print("下載完成")
+        print(save_path)
+if __name__ == "__main__":
+    download_data()
