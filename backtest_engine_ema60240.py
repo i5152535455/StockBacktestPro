@@ -109,16 +109,25 @@ def run_backtest(df, verbose=True):
     # ===================
         if position and not partial_exit:
 
-            print(
-                buy_date,
-                "Buy:", round(buy_price,2),
-                "Now:", round(row["Close"],2),
-                "Target:", round(buy_price*3,2)
-            )
+            if verbose:
+                print(
+                    buy_date,
+                    "Buy:", round(buy_price,2),
+                    "Now:", round(row["Close"],2),
+                    "Target:", round(
+                        buy_price * config.TAKE_PROFIT_MULTIPLE,
+                        2
+                    )
+                )
 
-            if row["Close"] >= buy_price * 2:
+            if (
+                position
+                and not partial_exit
+                and row["Close"] >= buy_price * config.TAKE_PROFIT_MULTIPLE
+            ):
 
-                print(">>> Triple Hit <<<")
+                if verbose:
+                 print(">>> Triple Hit <<<")
 
                 record_sell(
                     pf,
@@ -138,7 +147,7 @@ def run_backtest(df, verbose=True):
         # ===================
         # 跌破 EMA60 出場
         # ===================
-        if position and row["Close"] < row[f"EMA{config.FAST_EMA}"]:
+        if position and row["Close"] < row[f"EMA{config.EXIT_EMA}"]:
 
             sell_price = row["Close"]
             sell_date = row["Date"]

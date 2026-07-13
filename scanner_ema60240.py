@@ -66,11 +66,14 @@ results_df = results_df.sort_values(
     ascending=False
 ).reset_index(drop=True)
 
+
 # 計算 Score
+results_df["PF Score"] = results_df["Profit Factor"].clip(upper=10)
+
 results_df["Score"] = (
     results_df["ROI"] * config.ROI_WEIGHT +
     results_df["Win Rate"] * config.WINRATE_WEIGHT +
-    results_df["Profit Factor"] * 10 * config.PF_WEIGHT +
+    results_df["PF Score"] * 10 * config.PF_WEIGHT +
     (100 - results_df["Max DD"]) * config.DD_WEIGHT
 )
 
@@ -90,13 +93,6 @@ buy_df = buy_df.sort_values(
     ascending=False
 ).reset_index(drop=True)
 
-results_df["Score"] = (
-    results_df["ROI"] * config.ROI_WEIGHT +
-    results_df["Win Rate"] * config.WINRATE_WEIGHT +
-    results_df["Profit Factor"] * 10 * config.PF_WEIGHT +
-    (100 - results_df["Max DD"]) * config.DD_WEIGHT
-)
-results_df["Score"] = results_df["Score"].round(2)
 
 print()
 print("========== Scanner Result ==========")
@@ -110,15 +106,15 @@ print(buy_df)
 os.makedirs("output", exist_ok=True)
 
 results_df.to_csv(
-    "output/scanner_result.csv",
+    "output/scanner_result_ema60240.csv",
     index=False,
     encoding="utf-8-sig"
 )
 buy_df.to_csv(
-    "output/buy_candidates.csv",
+    "output/buy_candidates_ema60240.csv",
     index=False,
     encoding="utf-8-sig"
 )
 print()
-print("已輸出：output/scanner_result.csv")
-print("已輸出：output/buy_candidates.csv")
+print("已輸出：output/scanner_result_ema60240.csv")
+print("已輸出：output/buy_candidates_ema60240.csv")
