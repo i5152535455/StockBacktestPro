@@ -102,6 +102,7 @@ def run_backtest(df, verbose=True):
             pf.buy(buy_date, buy_price)
 
             partial_exit = False
+            continue
 
     # ===================
     # 三倍停利
@@ -115,7 +116,7 @@ def run_backtest(df, verbose=True):
                 "Target:", round(buy_price*3,2)
             )
 
-            if row["Close"] >= buy_price * 3:
+            if row["Close"] >= buy_price * 2:
 
                 print(">>> Triple Hit <<<")
 
@@ -137,7 +138,7 @@ def run_backtest(df, verbose=True):
         # ===================
         # 跌破 EMA60 出場
         # ===================
-        elif position and row["Close"] < row[f"EMA{config.FAST_EMA}"]:
+        if position and row["Close"] < row[f"EMA{config.FAST_EMA}"]:
 
             sell_price = row["Close"]
             sell_date = row["Date"]
@@ -157,6 +158,7 @@ def run_backtest(df, verbose=True):
             position_size = 0
             buy_price = 0
             buy_date = None
+            partial_exit = False
 
 
     # 下一步會真正實作賣出1/3
