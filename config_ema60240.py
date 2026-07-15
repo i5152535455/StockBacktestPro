@@ -105,6 +105,8 @@ MIN_PROFIT_FACTOR = 2
 
 MAX_DRAWDOWN = 5
 
+MIN_TRADES = 10
+
 # ======================================
 # Scanner Score
 # ======================================

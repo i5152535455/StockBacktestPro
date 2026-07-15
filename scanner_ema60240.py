@@ -84,7 +84,8 @@ buy_df = results_df[
     (results_df["ROI"] >= config.MIN_ROI) &
     (results_df["Win Rate"] >= config.MIN_WIN_RATE) &
     (results_df["Profit Factor"] >= config.MIN_PROFIT_FACTOR) &
-    (results_df["Max DD"] <= config.MAX_DRAWDOWN)
+    (results_df["Max DD"] <= config.MAX_DRAWDOWN) &
+    (results_df["Trades"] >= config.MIN_TRADES)
 ]
 
 # Buy Candidates 依 Score 排序
