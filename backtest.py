@@ -1,8 +1,8 @@
 import config
-import indicators
-import strategy
-import backtest_engine
-import report
+from utils import indicators
+from reports import report
+from strategies import ema60240 as strategy
+from core import engine as backtest_engine
 
 filepath = "data/TW/2330.csv"
 
@@ -27,7 +27,7 @@ print(df[["Date", fast_name, slow_name, "BUY", "SELL"]].tail(20))
 # 執行回測
 trades = backtest_engine.run_backtest(
     df,
-    verbose=True
+    verbose=config.VERBOSE
 )
 
 # 顯示交易紀錄

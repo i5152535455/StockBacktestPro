@@ -1,10 +1,10 @@
 import os
 import pandas as pd
 
-import config_ema60240 as config
+import config
 import indicators
-import strategy_ema60240 as strategy
-import backtest_engine_ema60240 as backtest_engine
+import strategy
+import backtest_engine
 import report
 
 folder = "data/TW"

@@ -1,8 +1,8 @@
-import config_ema60240 as config
+import config
 import indicators
+import strategy
+import backtest_engine
 import report
-import strategy_ema60240 as strategy
-import backtest_engine_ema60240 as backtest_engine
 
 filepath = "data/TW/2330.csv"
 

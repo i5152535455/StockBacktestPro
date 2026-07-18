@@ -1,5 +1,5 @@
 import pandas as pd
-import config_ema60240 as config
+import config
 
 
 def generate_signal(df):

@@ -1,6 +1,6 @@
 import pandas as pd
-import config_ema60240 as config
-import portfolio_ema60240 as portfolio
+import config
+import portfolio
 
 def calculate_profit(buy_price, sell_price):
 
@@ -34,14 +34,12 @@ def record_sell(
     buy_price,
     sell_date,
     sell_price,
-    position,
     exit_reason
 ):
 
     pf.sell(
         sell_date,
         sell_price,
-        position=position,
         exit_reason=exit_reason
     )
 
@@ -51,103 +49,52 @@ def record_sell(
     )
 
     profit_amount = calculate_profit_amount(
-        config.POSITION_SIZE * position,
+        config.POSITION_SIZE,
         buy_price,
         sell_price
     )
 
     trades.append({
-
         "Buy Date": buy_date,
         "Buy Price": buy_price,
-
         "Sell Date": sell_date,
         "Sell Price": sell_price,
-
-        "Position": position,
-
-        "Profit %": round(profit,2),
-        "Profit Amount": round(profit_amount,0),
-
+        "Profit %": round(profit, 2),
+        "Profit Amount": round(profit_amount, 0),
         "Exit Reason": exit_reason
-
     })
+
 
 def run_backtest(df, verbose=True):
 
     pf = portfolio.Portfolio()
-
     position = False
-    position_size = 0
-
     buy_price = 0
     buy_date = None
-
-    partial_exit = False
+    stop_loss_price = 0
 
     trades = []
 
     for _, row in df.iterrows():
 
-    # ===================
-    # 買進
-    # ===================
+        # ===================
+        # 買進
+        # ===================
         if row["BUY"] and not position:
 
             position = True
-            position_size = 1.0
             buy_price = row["Close"]
             buy_date = row["Date"]
 
             pf.buy(buy_date, buy_price)
 
-            partial_exit = False
-            continue
-
-    # ===================
-    # 三倍停利
-    # ===================
-        if position and not partial_exit:
-
-            if verbose:
-                print(
-                    buy_date,
-                    "Buy:", round(buy_price,2),
-                    "Now:", round(row["Close"],2),
-                    "Target:", round(
-                        buy_price * config.TAKE_PROFIT_MULTIPLE,
-                        2
-                    )
-                )
-
-            if (
-                position
-                and not partial_exit
-                and row["Close"] >= buy_price * config.TAKE_PROFIT_MULTIPLE
-            ):
-
-                if verbose:
-                 print(">>> Triple Hit <<<")
-
-                record_sell(
-                    pf,
-                    trades,
-                    buy_date,
-                    buy_price,
-                    row["Date"],
-                    row["Close"],
-                    1/3,
-                    "Triple Target"
-                )
-
-                position_size = 2/3
-                partial_exit = True
-
+            stop_loss_price = buy_price * (1 - config.STOP_LOSS / 100)
+            take_profit_price = buy_price * (1 + config.TAKE_PROFIT / 100)
 
         # ===================
-        # 跌破 EMA60 出場
+        # 停損
         # ===================
-        if position and row["Close"] < row[f"EMA{config.EXIT_EMA}"]:
+        elif position and row["Close"] < row[f"EMA{config.FAST_EMA}"]:
 
             sell_price = row["Close"]
             sell_date = row["Date"]
@@ -159,19 +106,57 @@ def run_backtest(df, verbose=True):
                 buy_price,
                 sell_date,
                 sell_price,
-                position_size,
-                "EMA60 Exit"
+                "Stop Loss"
+)
+           
+
+            position = False
+            buy_price = 0
+            buy_date = None
+
+        # ===================
+        # 停利
+        # ===================
+        elif position and row["Close"] >= take_profit_price:
+
+            sell_price = row["Close"]
+            sell_date = row["Date"]
+
+            record_sell(
+                pf,
+                trades,
+                buy_date,
+                buy_price,
+                sell_date,
+                sell_price,
+                "Take Profit"
             )
 
             position = False
-            position_size = 0
+            buy_price = 0
+            buy_date = None    
+
+        # ===================
+        # EMA死亡交叉賣出
+        # ===================
+        elif row["SELL"] and position:
+
+            sell_price = row["Close"]
+            sell_date = row["Date"]
+
+            record_sell(
+                pf,
+                trades,
+                buy_date,
+                buy_price,
+                sell_date,
+                sell_price,
+                "EMA Sell"
+            )
+
+            position = False
             buy_price = 0
             buy_date = None
-            partial_exit = False
-
-
-    # 下一步會真正實作賣出1/3
- 
 
     # ===================
     # 最後一天平倉
@@ -188,7 +173,6 @@ def run_backtest(df, verbose=True):
             buy_price,
             sell_date,
             sell_price,
-            position_size,
             "End of Backtest"
         )
 

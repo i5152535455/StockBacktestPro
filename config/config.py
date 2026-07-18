@@ -59,10 +59,6 @@ USE_EMA_EXIT = True
 USE_STOP_LOSS = False
 STOP_LOSS = 8
 
-# 除錯設定
-# ==========================
-VERBOSE = False
-
 # ======================================
 # Transaction Cost
 # ======================================
