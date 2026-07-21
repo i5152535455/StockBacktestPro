@@ -1,11 +1,11 @@
 import os
 import pandas as pd
-
 import config
-import indicators
-import strategy
-import backtest_engine
-import report
+
+from utils import indicators
+from strategies import ema60240 as strategy
+from core import engine as backtest_engine
+from reports import report
 
 folder = "data/TW"
 results = []
@@ -67,36 +67,32 @@ results_df = results_df.sort_values(
 ).reset_index(drop=True)
 
 # 計算 Score
+results_df["PF Score"] = results_df["Profit Factor"].clip(upper=10)
+
 results_df["Score"] = (
     results_df["ROI"] * config.ROI_WEIGHT +
     results_df["Win Rate"] * config.WINRATE_WEIGHT +
-    results_df["Profit Factor"] * 10 * config.PF_WEIGHT +
+    results_df["PF Score"] * 10 * config.PF_WEIGHT +
     (100 - results_df["Max DD"]) * config.DD_WEIGHT
 )
 
+# 先四捨五入
 results_df["Score"] = results_df["Score"].round(2)
 
-# 建立 Buy Candidates
 buy_df = results_df[
     (results_df["ROI"] >= config.MIN_ROI) &
     (results_df["Win Rate"] >= config.MIN_WIN_RATE) &
     (results_df["Profit Factor"] >= config.MIN_PROFIT_FACTOR) &
-    (results_df["Max DD"] <= config.MAX_DRAWDOWN)
+    (results_df["Max DD"] <= config.MAX_DRAWDOWN) &
+    (results_df["Trades"] >= config.MIN_TRADES)
 ]
+
 
 # Buy Candidates 依 Score 排序
 buy_df = buy_df.sort_values(
     by="Score",
     ascending=False
 ).reset_index(drop=True)
-
-results_df["Score"] = (
-    results_df["ROI"] * config.ROI_WEIGHT +
-    results_df["Win Rate"] * config.WINRATE_WEIGHT +
-    results_df["Profit Factor"] * 10 * config.PF_WEIGHT +
-    (100 - results_df["Max DD"]) * config.DD_WEIGHT
-)
-results_df["Score"] = results_df["Score"].round(2)
 
 print()
 print("========== Scanner Result ==========")
