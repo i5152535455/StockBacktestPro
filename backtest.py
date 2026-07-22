@@ -1,7 +1,9 @@
 import config
 from utils import indicators
 from reports import report
-from strategies import ema60240 as strategy
+from strategies.loader import get_strategy
+
+strategy = get_strategy()
 from core import engine as backtest_engine
 
 filepath = "data/TW/2330.csv"
@@ -14,6 +16,8 @@ df = indicators.convert_timeframe(df)
 
 # 計算EMA
 df = indicators.calculate_ema(df)
+
+df = strategy.prepare(df)
 
 # 建立買賣訊號
 df = strategy.generate_signal(df)

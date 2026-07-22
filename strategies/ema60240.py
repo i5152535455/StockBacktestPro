@@ -2,6 +2,25 @@ import pandas as pd
 import config
 
 
+"""
+EMA 60/240 Strategy
+"""
+
+import config
+
+
+def prepare(df):
+    """
+    準備策略需要的資料
+
+    如果策略需要自己計算 MACD、ATR、
+    SuperTrend...等等，就放這裡。
+
+    EMA60240 目前不用做任何事。
+    """
+
+    return df
+
 def generate_signal(df):
 
     fast_name = f"EMA{config.FAST_EMA}"
@@ -32,6 +51,8 @@ def generate_signal(df):
     # ===========================
     # SELL
     # ===========================
-    df["SELL"] = False
+    df["SELL"] = (
+    df["Close"] < df[f"EMA{config.EXIT_EMA}"]
+    )
 
     return df

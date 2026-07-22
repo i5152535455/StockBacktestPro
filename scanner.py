@@ -3,7 +3,9 @@ import pandas as pd
 import config
 
 from utils import indicators
-from strategies import ema60240 as strategy
+from strategies.loader import get_strategy
+
+strategy = get_strategy()
 from core import engine as backtest_engine
 from reports import report
 
@@ -28,6 +30,8 @@ for file in os.listdir(folder):
         df = indicators.convert_timeframe(df)
 
         df = indicators.calculate_ema(df)
+
+        df = strategy.prepare(df)
 
         df = strategy.generate_signal(df)
 

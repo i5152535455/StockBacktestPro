@@ -147,7 +147,7 @@ def run_backtest(df, verbose=True):
         # ===================
         # 跌破 EMA60 出場
         # ===================
-        if position and row["Close"] < row[f"EMA{config.EXIT_EMA}"]:
+        if position and row["SELL"]:
 
             sell_price = row["Close"]
             sell_date = row["Date"]
