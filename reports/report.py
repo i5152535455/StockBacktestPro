@@ -6,7 +6,22 @@ import matplotlib.pyplot as plt
 def calculate_metrics(trades):
 
     if trades.empty:
-        return None
+        return {
+            "Trades": 0,
+            "Win Rate": 0,
+            "Average Profit": 0,
+            "Average Win": 0,
+            "Average Loss": 0,
+            "Risk Reward": 0,
+            "Profit Factor": 0,
+            "Best Trade": 0,
+            "Worst Trade": 0,
+            "Total Profit": 0,
+            "Max Drawdown": 0,
+            "Net Profit": 0,
+            "Final Capital": config.INITIAL_CAPITAL,
+            "ROI": 0
+        }
 
     total_trade = len(trades)
 

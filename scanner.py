@@ -42,6 +42,11 @@ for file in os.listdir(folder):
 
         metrics = report.calculate_metrics(trades)
 
+        # 沒有任何交易，直接跳過
+        if metrics["Trades"] == 0:
+            print(f"{file} 無交易")
+            continue
+
         results.append({
             "Stock": file.replace(".csv", ""),
             "ROI": round(metrics["ROI"], 2),

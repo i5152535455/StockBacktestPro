@@ -124,4 +124,4 @@ DD_WEIGHT = 0.10
 # Strategy
 # ==========================================
 
-STRATEGY = "ema60240"
+STRATEGY = "macd"
