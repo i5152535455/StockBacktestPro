@@ -69,3 +69,46 @@ def calculate_ema(df):
     )
 
     return df
+
+def calculate_macd(
+    df,
+    fast=12,
+    slow=26,
+    signal=9,
+):
+    """
+    Calculate MACD indicator.
+
+    Parameters
+    ----------
+    fast : int
+        Fast EMA period.
+    slow : int
+        Slow EMA period.
+    signal : int
+        Signal EMA period.
+    """
+
+    ema_fast = df["Close"].ewm(
+        span=fast,
+        adjust=False
+    ).mean()
+
+    ema_slow = df["Close"].ewm(
+        span=slow,
+        adjust=False
+    ).mean()
+
+    df["MACD"] = ema_fast - ema_slow
+
+    df["MACD_SIGNAL"] = (
+        df["MACD"]
+        .ewm(span=signal, adjust=False)
+        .mean()
+    )
+
+    df["MACD_HIST"] = (
+        df["MACD"] - df["MACD_SIGNAL"]
+    )
+
+    return df

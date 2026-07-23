@@ -17,6 +17,18 @@ df = indicators.convert_timeframe(df)
 # 計算EMA
 df = indicators.calculate_ema(df)
 
+df = indicators.calculate_macd(df)
+
+print(df[
+    [
+        "Date",
+        "Close",
+        "MACD",
+        "MACD_SIGNAL",
+        "MACD_HIST"
+    ]
+].tail())
+
 df = strategy.prepare(df)
 
 # 建立買賣訊號
