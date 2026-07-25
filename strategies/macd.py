@@ -5,6 +5,13 @@ MACD Trend Strategy
 import config
 from utils import indicators
 
+def get_info():
+    return {
+        "name": "MACD",
+        "version": "1.0",
+        "description": "EMA Trend + MACD Cross"
+    }
+
 
 def prepare(df):
     """
@@ -69,5 +76,9 @@ def generate_signal(df):
     "SELL:",
     df["SELL"].sum()
 )
+
+    df["EXIT_REASON"] = ""
+    df.loc[df["SELL"], "EXIT_REASON"] = "MACD Exit"
+
 
     return df

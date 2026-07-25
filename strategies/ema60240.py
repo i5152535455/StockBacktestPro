@@ -6,7 +6,12 @@ import config
 EMA 60/240 Strategy
 """
 
-import config
+def get_info():
+    return {
+        "name": "EMA",
+        "version": "1.0",
+        "description": "EMA60 / EMA240 Trend"
+    }
 
 
 def prepare(df):
@@ -54,5 +59,9 @@ def generate_signal(df):
     df["SELL"] = (
     df["Close"] < df[f"EMA{config.EXIT_EMA}"]
     )
+
+    df["EXIT_REASON"] = ""
+    df.loc[df["SELL"], "EXIT_REASON"] = "EMA60 Exit"
+
 
     return df

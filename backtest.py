@@ -4,6 +4,7 @@ from reports import report
 from strategies.loader import get_strategy
 
 strategy = get_strategy()
+info = strategy.get_info()
 from core import engine as backtest_engine
 
 filepath = "data/TW/2330.csv"
@@ -15,9 +16,16 @@ df = indicators.load_data(filepath)
 df = indicators.convert_timeframe(df)
 
 # 計算EMA
-df = indicators.calculate_ema(df)
+df = indicators.load_data(filepath)
 
-df = indicators.calculate_macd(df)
+df = indicators.convert_timeframe(df)
+
+strategy = get_strategy()
+info = strategy.get_info()
+
+df = strategy.prepare(df)
+
+df = strategy.generate_signal(df)
 
 print(df[
     [
@@ -39,6 +47,11 @@ slow_name = f"EMA{config.SLOW_EMA}"
 
 # 顯示最後20筆資料
 print(df[["Date", fast_name, slow_name, "BUY", "SELL"]].tail(20))
+
+print("\n========== Strategy ==========")
+print(f"Name       : {info['name']}")
+print(f"Version    : {info['version']}")
+print(f"Description: {info['description']}")
 
 # 執行回測
 trades = backtest_engine.run_backtest(

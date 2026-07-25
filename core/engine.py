@@ -160,7 +160,7 @@ def run_backtest(df, verbose=True):
                 sell_date,
                 sell_price,
                 position_size,
-                "EMA60 Exit"
+                row["EXIT_REASON"]
             )
 
             position = False
