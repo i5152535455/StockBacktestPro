@@ -125,3 +125,7 @@ DD_WEIGHT = 0.10
 # ==========================================
 
 STRATEGY = "macd"
+AVAILABLE_STRATEGIES = [
+    "ema60240",
+    "macd",
+]

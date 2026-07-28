@@ -44,6 +44,8 @@ def calculate_metrics(trades):
             "Profit %"
         ].mean()
     )
+    avg_win = 0 if pd.isna(avg_win) else avg_win
+    avg_loss = 0 if pd.isna(avg_loss) else avg_loss
 
     risk_reward = avg_win / avg_loss
 
@@ -121,137 +123,34 @@ def show_report(trades):
     # 基本統計
     # ==========================
 
-    total_trade = len(trades)
-
-    win_trade = len(trades[trades["Profit %"] > 0])
-
-    lose_trade = len(trades[trades["Profit %"] <= 0])
-
-    win_rate = win_trade / total_trade * 100
-
-    avg_profit = trades["Profit %"].mean()
-        # ==========================
-    # Profit Factor
-    # ==========================
-
-       # ==========================
-    # Average Win / Loss
-    # ==========================
-
-    avg_win = trades.loc[
-        trades["Profit %"] > 0,
-        "Profit %"
-    ].mean()
-
-    avg_loss = abs(
-        trades.loc[
-            trades["Profit %"] < 0,
-            "Profit %"
-        ].mean()
-    )
-
-    risk_reward = avg_win / avg_loss
-   
-    gross_profit = trades.loc[
-        trades["Profit Amount"] > 0,
-        "Profit Amount"
-    ].sum()
-
-    gross_loss = abs(
-        trades.loc[
-            trades["Profit Amount"] < 0,
-            "Profit Amount"
-        ].sum()
-    )
-
-    if gross_loss == 0:
-        profit_factor = float("inf")
-    else:
-        profit_factor = gross_profit / gross_loss
-
-    best_trade = trades["Profit %"].max()
-
-    worst_trade = trades["Profit %"].min()
-
-    total_profit = trades["Profit %"].sum()
-
-    # ==========================
-    # Portfolio
-    # ==========================
-
-    net_profit = trades["Profit Amount"].sum()
-        # ==========================
-    # Equity Curve
-    # ==========================
-
-    equity = [config.INITIAL_CAPITAL]
-
-    current = config.INITIAL_CAPITAL
-
-    for profit in trades["Profit Amount"]:
-
-        current += profit
-
-        equity.append(current)
-
-    final_capital = config.INITIAL_CAPITAL + net_profit
-
-    roi = net_profit / config.INITIAL_CAPITAL * 100
-
-    # ==========================
-    # 最大回撤 (Max Drawdown)
-    # ==========================
-
-    equity = [config.INITIAL_CAPITAL]
-
-    for profit in trades["Profit Amount"]:
-        equity.append(equity[-1] + profit)
-
-    peak = equity[0]
-    max_drawdown = 0
-
-    for value in equity:
-
-        if value > peak:
-            peak = value
-
-        drawdown = (peak - value) / peak * 100
-
-        if drawdown > max_drawdown:
-            max_drawdown = drawdown
+    metrics = calculate_metrics(trades)
 
     # ==========================
     # 顯示結果
     # ==========================
 
-    print()
-    print("========== 回測報告 ==========")
-
-    print(f"交易次數：{total_trade}")
-    print(f"勝率：{win_rate:.2f}%")
-    print()
-
-    print(f"平均獲利：{avg_win:.2f}%")
-    print(f"平均虧損：{avg_loss:.2f}%")
-    print(f"盈虧比：{risk_reward:.2f}")
-
-    print()
-
-    print(f"平均報酬：{avg_profit:.2f}%")
-    print(f"最佳交易：{best_trade:.2f}%")
-    print(f"最差交易：{worst_trade:.2f}%")
-    print(f"累積報酬：{total_profit:.2f}%")
-    print(f"Profit Factor：{profit_factor:.2f}")
-    print(f"最大回撤：{max_drawdown:.2f}%")
-
-    print()
-    print("========== Portfolio ==========")
+    print(f"交易次數：{metrics['Trades']}")
+    print(f"勝率：{metrics['Win Rate']:.2f}%")
+    print(f"平均獲利：{metrics['Average Win']:.2f}%")
+    print(f"平均虧損：{metrics['Average Loss']:.2f}%")
+    print(f"盈虧比：{metrics['Risk Reward']:.2f}")
+    print(f"平均報酬：{metrics['Average Profit']:.2f}%")
+    print(f"最佳交易：{metrics['Best Trade']:.2f}%")
+    print(f"最差交易：{metrics['Worst Trade']:.2f}%")
+    print(f"累積報酬：{metrics['Total Profit']:.2f}%")
+    print(f"Profit Factor：{metrics['Profit Factor']:.2f}")
+    print(f"最大回撤：{metrics['Max Drawdown']:.2f}%")
 
     print(f"初始本金：{config.INITIAL_CAPITAL:,.0f}")
-    print(f"總獲利：{net_profit:,.0f}")
-    print(f"最終本金：{final_capital:,.0f}")
-    print(f"ROI：{roi:.2f}%")
-        # ==========================
+    print(f"總獲利：{metrics['Net Profit']:,.0f}")
+    print(f"最終本金：{metrics['Final Capital']:,.0f}")
+    print(f"ROI：{metrics['ROI']:.2f}%")
+
+    equity = [config.INITIAL_CAPITAL]
+
+    for profit in trades["Profit Amount"]:
+        equity.append(equity[-1] + profit)
+            # ==========================
     # 輸出 Equity Curve
     # ==========================
 

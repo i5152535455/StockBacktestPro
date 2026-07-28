@@ -1,6 +1,6 @@
 import pandas as pd
 import config
-
+from utils import indicators
 
 """
 EMA 60/240 Strategy
@@ -17,12 +17,9 @@ def get_info():
 def prepare(df):
     """
     準備策略需要的資料
-
-    如果策略需要自己計算 MACD、ATR、
-    SuperTrend...等等，就放這裡。
-
-    EMA60240 目前不用做任何事。
     """
+
+    df = indicators.calculate_ema(df)
 
     return df
 
