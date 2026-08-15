@@ -3,7 +3,7 @@ import config
 import os
 import matplotlib.pyplot as plt
 
-def calculate_metrics(trades):
+def calculate_metrics(trades, equity_curve=None):
 
     if trades.empty:
         return {
@@ -47,7 +47,10 @@ def calculate_metrics(trades):
     avg_win = 0 if pd.isna(avg_win) else avg_win
     avg_loss = 0 if pd.isna(avg_loss) else avg_loss
 
-    risk_reward = avg_win / avg_loss
+    if avg_loss == 0:
+        risk_reward = float("inf")
+    else:
+        risk_reward = avg_win / avg_loss
 
     gross_profit = trades.loc[
         trades["Profit Amount"] > 0,
@@ -78,20 +81,34 @@ def calculate_metrics(trades):
 
     roi = net_profit / config.INITIAL_CAPITAL * 100
 
-    equity = [config.INITIAL_CAPITAL]
+# ======================================
+# ======================================
+# Max Drawdown
+# 只使用「平倉後」的已實現資金
+# 不計算持倉期間浮動損益
+# ======================================
+
+    equity_values = [config.INITIAL_CAPITAL]
 
     for profit in trades["Profit Amount"]:
-        equity.append(equity[-1] + profit)
 
-    peak = equity[0]
+        equity_values.append(
+            equity_values[-1] + profit
+        )
+
+    peak = equity_values[0]
     max_drawdown = 0
 
-    for value in equity:
+    for value in equity_values:
 
         if value > peak:
             peak = value
 
-        drawdown = (peak - value) / peak * 100
+        drawdown = (
+            (peak - value)
+            / peak
+            * 100
+        )
 
         if drawdown > max_drawdown:
             max_drawdown = drawdown

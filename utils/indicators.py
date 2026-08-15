@@ -4,7 +4,7 @@ import config
 
 def load_data(filepath):
 
-    df = pd.read_csv(filepath, header=[0,1], index_col=0)
+    df = pd.read_csv(filepath, header=[0, 1], index_col=0)
 
     # 把第二層欄位去掉
     df.columns = df.columns.get_level_values(0)
@@ -17,6 +17,12 @@ def load_data(filepath):
 
     # 日期格式
     df["Date"] = pd.to_datetime(df["Date"])
+
+    # ======================================
+    # Backtest Date Range
+    # ======================================
+
+
 
     return df
 
@@ -58,13 +64,21 @@ def calculate_ema(df):
 
     df[fast_name] = (
         df["Close"]
-        .ewm(span=config.FAST_EMA, adjust=False)
+        .ewm(
+            span=config.FAST_EMA,
+            adjust=False,
+            min_periods=config.FAST_EMA
+        )
         .mean()
     )
 
     df[slow_name] = (
         df["Close"]
-        .ewm(span=config.SLOW_EMA, adjust=False)
+        .ewm(
+            span=config.SLOW_EMA,
+            adjust=False,
+            min_periods=config.SLOW_EMA
+        )
         .mean()
     )
 

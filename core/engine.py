@@ -73,6 +73,7 @@ def record_sell(
 
     })
 
+
 def run_backtest(df, verbose=True):
 
     pf = portfolio.Portfolio()
@@ -87,11 +88,24 @@ def run_backtest(df, verbose=True):
 
     trades = []
 
+    # ======================================
+    # Equity Curve
+    # ======================================
+
+    equity_curve = []
+
+    initial_capital = config.INITIAL_CAPITAL
+
+    # ======================================
+    # 回測
+    # ======================================
+
     for _, row in df.iterrows():
 
-    # ===================
-    # 買進
-    # ===================
+        # ==================================
+        # 買進
+        # ==================================
+
         if row["BUY"] and not position:
 
             position = True
@@ -99,35 +113,37 @@ def run_backtest(df, verbose=True):
             buy_price = row["Close"]
             buy_date = row["Date"]
 
-            pf.buy(buy_date, buy_price)
+            pf.buy(
+                buy_date,
+                buy_price
+            )
 
             partial_exit = False
-            continue
 
-    # ===================
-    # 三倍停利
-    # ===================
+        # ==================================
+        # 三倍停利
+        # ==================================
+
         if position and not partial_exit:
 
             if verbose:
                 print(
                     buy_date,
-                    "Buy:", round(buy_price,2),
-                    "Now:", round(row["Close"],2),
+                    "Buy:", round(buy_price, 2),
+                    "Now:", round(row["Close"], 2),
                     "Target:", round(
                         buy_price * config.TAKE_PROFIT_MULTIPLE,
                         2
                     )
                 )
 
-            if (
-                position
-                and not partial_exit
-                and row["Close"] >= buy_price * config.TAKE_PROFIT_MULTIPLE
+            if row["Close"] >= (
+                buy_price *
+                config.TAKE_PROFIT_MULTIPLE
             ):
 
                 if verbose:
-                 print(">>> Triple Hit <<<")
+                    print(">>> Triple Hit <<<")
 
                 record_sell(
                     pf,
@@ -136,17 +152,17 @@ def run_backtest(df, verbose=True):
                     buy_price,
                     row["Date"],
                     row["Close"],
-                    1/3,
+                    1 / 3,
                     "Triple Target"
                 )
 
-                position_size = 2/3
+                position_size = 2 / 3
                 partial_exit = True
 
+        # ==================================
+        # EMA60 出場
+        # ==================================
 
-        # ===================
-        # 跌破 EMA60 出場
-        # ===================
         if position and row["SELL"]:
 
             sell_price = row["Close"]
@@ -169,13 +185,42 @@ def run_backtest(df, verbose=True):
             buy_date = None
             partial_exit = False
 
+        # ==================================
+        # 計算當期 Equity
+        # ==================================
 
-    # 下一步會真正實作賣出1/3
- 
+        realized_profit = sum(
+            trade["Profit Amount"]
+            for trade in trades
+        )
 
-    # ===================
+        unrealized_profit = 0
+
+        if position:
+
+            current_price = row["Close"]
+
+            unrealized_profit = calculate_profit_amount(
+                config.POSITION_SIZE * position_size,
+                buy_price,
+                current_price
+            )
+
+        equity = (
+            initial_capital
+            + realized_profit
+            + unrealized_profit
+        )
+
+        equity_curve.append({
+            "Date": row["Date"],
+            "Equity": equity
+        })
+
+    # ======================================
     # 最後一天平倉
-    # ===================
+    # ======================================
+
     if position:
 
         sell_price = df.iloc[-1]["Close"]
@@ -192,7 +237,30 @@ def run_backtest(df, verbose=True):
             "End of Backtest"
         )
 
+        # 最後一天更新 Equity
+        realized_profit = sum(
+            trade["Profit Amount"]
+            for trade in trades
+        )
+
+        equity_curve.append({
+            "Date": sell_date,
+            "Equity": initial_capital + realized_profit
+        })
+
+    # ======================================
+    # Portfolio
+    # ======================================
+
     if verbose:
-     pf.summary()
-    
-    return pd.DataFrame(trades)
+        pf.summary()
+
+    trades_df = pd.DataFrame(trades)
+
+    # ======================================
+    # Equity Curve DataFrame
+    # ======================================
+
+    equity_df = pd.DataFrame(equity_curve)
+
+    return trades_df, equity_df

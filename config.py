@@ -61,7 +61,7 @@ STOP_LOSS = 8
 
 # 除錯設定
 # ==========================
-VERBOSE = False
+VERBOSE = True
 
 # ======================================
 # Transaction Cost
@@ -82,7 +82,7 @@ MIN_VOLUME = 500
 # Backtest
 # ======================================
 
-START_DATE = "2023-01-01"
+START_DATE = "2020-01-01"
 END_DATE = "2026-07-01"
 
 # ======================================
@@ -124,7 +124,7 @@ DD_WEIGHT = 0.10
 # Strategy
 # ==========================================
 
-STRATEGY = "macd"
+STRATEGY = "ema60240"
 AVAILABLE_STRATEGIES = [
     "ema60240",
     "macd",

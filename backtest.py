@@ -1,68 +1,100 @@
 import config
-from utils import indicators
-from reports import report
-from strategies.loader import get_strategy
 
-strategy = get_strategy()
-info = strategy.get_info()
-from core import engine as backtest_engine
+from services.backtest_service import run
+from reports import report
+
+
+# ======================================
+# Stock
+# ======================================
 
 filepath = "data/TW/2330.csv"
 
-# 讀取資料
-df = indicators.load_data(filepath)
 
-# 轉換週期(日K / 周K)
-df = indicators.convert_timeframe(df)
+# ======================================
+# Run Backtest
+# ======================================
 
-# 計算EMA
-df = indicators.load_data(filepath)
+result = run(filepath)
 
-df = indicators.convert_timeframe(df)
+strategy = result["strategy"]
+df = result["data"]
+trades = result["trades"]
 
-strategy = get_strategy()
-info = strategy.get_info()
 
-df = strategy.prepare(df)
+# ======================================
+# Strategy
+# ======================================
 
-df = strategy.generate_signal(df)
+print()
+print("========== Strategy ==========")
 
-print(df[
-    [
-        "Date",
-        "Close",
-        "MACD",
-        "MACD_SIGNAL",
-        "MACD_HIST"
-    ]
-].tail())
+print(f"Name       : {strategy['name']}")
+print(f"Version    : {strategy['version']}")
+print(f"Description: {strategy['description']}")
 
-df = strategy.prepare(df)
 
-# 建立買賣訊號
-df = strategy.generate_signal(df)
+# ======================================
+# Debug
+# ======================================
 
-fast_name = f"EMA{config.FAST_EMA}"
-slow_name = f"EMA{config.SLOW_EMA}"
+if config.VERBOSE:
 
-# 顯示最後20筆資料
-print(df[["Date", fast_name, slow_name, "BUY", "SELL"]].tail(20))
+    fast_name = f"EMA{config.FAST_EMA}"
+    slow_name = f"EMA{config.SLOW_EMA}"
 
-print("\n========== Strategy ==========")
-print(f"Name       : {info['name']}")
-print(f"Version    : {info['version']}")
-print(f"Description: {info['description']}")
+    print()
 
-# 執行回測
-trades = backtest_engine.run_backtest(
-    df,
-    verbose=config.VERBOSE
-)
+    print(
+        df[
+            [
+                "Date",
+                fast_name,
+                slow_name,
+                "BUY",
+                "SELL"
+            ]
+        ].tail(20)
+    )
 
-# 顯示交易紀錄
+    # ======================================
+# 顯示所有真正 Golden Cross
+# ======================================
+
+crosses = df[df["BUY"]].copy()
+
+print()
+print("========== Golden Cross ==========")
+
+if crosses.empty:
+
+    print("沒有 Golden Cross")
+
+else:
+
+    print(
+        crosses[
+            [
+                "Date",
+                "Close",
+                fast_name,
+                slow_name
+            ]
+        ].to_string(index=False)
+    )
+
+
+# ======================================
+# Trade Records
+# ======================================
+
 print()
 print("===== 交易紀錄 =====")
 print(trades)
 
-# 顯示回測報告
+
+# ======================================
+# Report
+# ======================================
+
 report.show_report(trades)
