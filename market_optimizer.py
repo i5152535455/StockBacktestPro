@@ -18,7 +18,7 @@ OUTPUT_FILE = "output/TW_market_ranking.csv"
 # 固定策略參數
 # ======================================
 
-FAST_EMA = 50
+FAST_EMA = 60
 SLOW_EMA = 200
 
 # EMA CROSS
@@ -106,10 +106,16 @@ for i, filepath in enumerate(files, start=1):
         metrics = result["metrics"]
         trades = result["trades"]
 
+        print()
+        print("========== DEBUG TRADES ==========")
+        print(trades)
+        print()
+        print("Total Profit Amount:")
+        print(trades["Profit Amount"].sum())
 
-        # ======================================
-        # 整理交易日期
-        # ======================================
+# ======================================
+# 整理交易日期
+# ======================================
 
         trade_dates = []
 
@@ -125,14 +131,19 @@ for i, filepath in enumerate(files, start=1):
                     trade["Sell Date"]
                 ).strftime("%Y-%m-%d")
 
-        buy_price = float(trade["Buy Price"])
-        sell_price = float(trade["Sell Price"])
+                buy_price = float(
+                    trade["Buy Price"]
+                )
 
-        trade_dates.append(
-            f"{buy_date} @ {buy_price:.2f} → "
-            f"{sell_date} @ {sell_price:.2f} "
-            f"[{trade['Exit Reason']}]"
-        )
+                sell_price = float(
+                    trade["Sell Price"]
+                )
+
+                trade_dates.append(
+                    f"{buy_date} @ {buy_price:.2f} → "
+                    f"{sell_date} @ {sell_price:.2f} "
+                    f"[{trade['Exit Reason']}]"
+                )
 
 
         trade_dates_text = " | ".join(

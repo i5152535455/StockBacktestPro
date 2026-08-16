@@ -2,128 +2,238 @@ import os
 import pandas as pd
 import config
 
-from utils import indicators
-from strategies.loader import get_strategy
+from services.backtest_service import run
 
-strategy = get_strategy()
-from core import engine as backtest_engine
-from reports import report
+
+# ======================================
+# Scanner Settings
+# ======================================
 
 folder = "data/TW"
+
 results = []
 
-print("開始掃描...")
+print("========== Stock Scanner ==========")
+print(f"Timeframe : {config.TIMEFRAME}")
+print(f"Fast EMA  : {config.FAST_EMA}")
+print(f"Slow EMA  : {config.SLOW_EMA}")
+print(f"Buy Mode  : {config.BUY_MODE}")
+print()
+
+
+# ======================================
+# 暫時關閉詳細輸出
+# ======================================
+
+original_verbose = config.VERBOSE
+config.VERBOSE = False
+
+
+# ======================================
+# Scan all stocks
+# ======================================
 
 for file in os.listdir(folder):
 
     if not file.endswith(".csv"):
         continue
 
+
     filepath = os.path.join(folder, file)
+
+    stock = file.replace(".csv", "")
 
     print(f"讀取：{filepath}")
 
     try:
 
-        df = indicators.load_data(filepath)
+        # ==================================
+        # 使用正式 Backtest Service
+        # ==================================
 
-        df = indicators.convert_timeframe(df)
+        result = run(filepath)
 
-        df = indicators.calculate_ema(df)
+        metrics = result["metrics"]
+        trades = result["trades"]
 
-        df = strategy.prepare(df)
+        print()
+        print("========== DEBUG TRADES ==========")
+        print(trades)
+        print()
+        print("Total Profit Amount:")
+        print(trades["Profit Amount"].sum())
 
-        df = strategy.generate_signal(df)
+        # ==================================
+        # 沒有交易
+        # ==================================
 
-        trades = backtest_engine.run_backtest(
-            df,
-            verbose=False
-        )
-
-        metrics = report.calculate_metrics(trades)
-
-        # 沒有任何交易，直接跳過
         if metrics["Trades"] == 0:
-            print(f"{file} 無交易")
+
+            print(f"{stock} 無交易")
+
             continue
 
+        # ==================================
+        # 取得交易日期
+        # ==================================
+
+        trade_periods = []
+
+        for trade in trades:
+
+            try:
+
+                buy_date = pd.to_datetime(
+                    trade["Buy Date"]
+                ).strftime("%Y-%m-%d")
+
+                sell_date = pd.to_datetime(
+                    trade["Sell Date"]
+                ).strftime("%Y-%m-%d")
+
+                trade_periods.append(
+                    f"{buy_date} → {sell_date}"
+                )
+
+            except Exception:
+
+                pass
+
+        trade_period = " | ".join(
+            trade_periods
+        )
+
+        # ==================================
+        # 儲存結果
+        # ==================================
+
         results.append({
-            "Stock": file.replace(".csv", ""),
-            "ROI": round(metrics["ROI"], 2),
-            "Win Rate": round(metrics["Win Rate"], 2),
-            "Profit Factor": round(metrics["Profit Factor"], 2),
-            "Max DD": round(metrics["Max Drawdown"], 2),
-            "Risk Reward": round(metrics["Risk Reward"], 2),
-            "Trades": metrics["Trades"]
+
+            "Stock":
+                stock,
+
+            "ROI":
+                round(
+                    metrics["ROI"],
+                    2
+                ),
+
+            "Max Drawdown":
+                round(
+                    metrics["Max Drawdown"],
+                    2
+                ),
+
+            "Trades":
+                metrics["Trades"],
+
+            "Win Rate":
+                round(
+                    metrics["Win Rate"],
+                    2
+                ),
+
+            "Profit Factor":
+                round(
+                    metrics["Profit Factor"],
+                    2
+                ),
+
+            "Net Profit": round(metrics["Net Profit"], 0),
+            "Final Capital": round(metrics["Final Capital"], 0),
+
+            "Final Capital":
+                metrics["Final Capital"],
+
+            "Trade Period":
+                trade_period
+
         })
 
-        print(f"{file} 完成")
+        print(
+            f"{stock} "
+            f"ROI={metrics['ROI']:.2f}% "
+            f"DD={metrics['Max Drawdown']:.2f}% "
+            f"Trades={metrics['Trades']}"
+        )
 
     except Exception as e:
 
-        print(f"{file} 發生錯誤：{e}")
+        print(
+            f"{file} 發生錯誤：{e}"
+        )
 
 
-print()
+# ======================================
+# 恢復 VERBOSE
+# ======================================
 
+config.VERBOSE = original_verbose
+
+
+# ======================================
+# 建立 DataFrame
+# ======================================
 
 results_df = pd.DataFrame(results)
 
-# ROI由大到小排序
-results_df = results_df.sort_values(
-    by="ROI",
-    ascending=False
-).reset_index(drop=True)
 
-# 計算 Score
-results_df["PF Score"] = results_df["Profit Factor"].clip(upper=10)
+if results_df.empty:
 
-results_df["Score"] = (
-    results_df["ROI"] * config.ROI_WEIGHT +
-    results_df["Win Rate"] * config.WINRATE_WEIGHT +
-    results_df["PF Score"] * 10 * config.PF_WEIGHT +
-    (100 - results_df["Max DD"]) * config.DD_WEIGHT
-)
+    print()
+    print("沒有任何股票產生交易。")
 
-# 先四捨五入
-results_df["Score"] = results_df["Score"].round(2)
+else:
 
-buy_df = results_df[
-    (results_df["ROI"] >= config.MIN_ROI) &
-    (results_df["Win Rate"] >= config.MIN_WIN_RATE) &
-    (results_df["Profit Factor"] >= config.MIN_PROFIT_FACTOR) &
-    (results_df["Max DD"] <= config.MAX_DRAWDOWN) &
-    (results_df["Trades"] >= config.MIN_TRADES)
-]
+    # ==================================
+    # ROI 排名
+    # ==================================
 
+    results_df = results_df.sort_values(
+        by="ROI",
+        ascending=False
+    ).reset_index(drop=True)
 
-# Buy Candidates 依 Score 排序
-buy_df = buy_df.sort_values(
-    by="Score",
-    ascending=False
-).reset_index(drop=True)
+    results_df.insert(
+        0,
+        "Rank",
+        range(
+            1,
+            len(results_df) + 1
+        )
+    )
 
-print()
-print("========== Scanner Result ==========")
-print(results_df)
+    # ==================================
+    # 顯示結果
+    # ==================================
 
-print()
-print("========== Buy Candidates ==========")
+    print()
+    print(
+        "========== ALL STOCKS RANKING =========="
+    )
 
-print(buy_df)
+    print(
+        results_df.to_string(
+            index=False
+        )
+    )
 
-os.makedirs("output", exist_ok=True)
+    # ==================================
+    # 儲存
+    # ==================================
 
-results_df.to_csv(
-    "output/scanner_result.csv",
-    index=False,
-    encoding="utf-8-sig"
-)
-buy_df.to_csv(
-    "output/buy_candidates.csv",
-    index=False,
-    encoding="utf-8-sig"
-)
-print()
-print("已輸出：output/scanner_result.csv")
-print("已輸出：output/buy_candidates.csv")
+    os.makedirs(
+        "output",
+        exist_ok=True
+    )
+
+    results_df.to_csv(
+        "output/scanner_result.csv",
+        index=False,
+        encoding="utf-8-sig"
+    )
+
+    print()
+    print(
+        "已輸出：output/scanner_result.csv"
+    )

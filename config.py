@@ -11,7 +11,7 @@ MARKET = "TW"          # TW / US
 
 # D = Daily
 # W = Weekly
-TIMEFRAME = "W"
+TIMEFRAME = "D"
 
 # ======================================
 # Strategy
@@ -90,6 +90,7 @@ END_DATE = "2026-07-01"
 # ======================================
 
 INITIAL_CAPITAL = 1_000_000
+POSITION_SIZE = INITIAL_CAPITAL
 
 # 預留多股票使用
 MAX_POSITIONS = 10
